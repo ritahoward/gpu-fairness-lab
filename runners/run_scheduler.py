@@ -44,6 +44,7 @@ def launch_job(job, ckpt_path, extra_env=None):
         env.update(extra_env)
     cmd = [job["script"]] + ([*job["args"].split()] if job["args"] else [])
     return subprocess.Popen(cmd, env=env)
+'''
 
 def graceful_slice(p, slice_sec, warn_before=10, wait_timeout=60):
     t0 = now_ts()
@@ -74,6 +75,38 @@ def graceful_slice(p, slice_sec, warn_before=10, wait_timeout=60):
     t1 = now_ts()
     used_wall = max(0, int(t1 - t0))
     return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1
+'''    
+def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
+    t0 = now_ts()
+    while True:
+        elapsed = now_ts() - t0
+        if elapsed >= max(0, slice_sec - warn_before): break
+        time.sleep(1)
+    try:
+        os.kill(p.pid, signal.SIGUSR1)
+    except ProcessLookupError:
+        pass
+    ckpt_overhead = None
+    try:
+        t_pre = now_ts()
+        p.wait(timeout=wait_timeout)
+        ckpt_overhead = now_ts() - t_pre
+    except subprocess.TimeoutExpired:
+        p.terminate()
+        try:
+            p.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            p.kill()
+        ckpt_overhead = wait_timeout + 10
+    t1 = now_ts()
+    used_wall = max(0, int(t1 - t0))
+    return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1
+    
+    
+    
+
+    
+    
 
 def main():
     ap = argparse.ArgumentParser()
@@ -82,6 +115,9 @@ def main():
     ap.add_argument("--slice-min", type=int, default=15)
     ap.add_argument("--obs-hours", type=float, default=4.0)
     ap.add_argument("--ckpt-root", default=os.path.join(LOGS_DIR, "ckpts"))
+    ap.add_argument("--warn-sec", type=int, default=5, help="片尾提前幾秒發 SIGUSR1")
+    ap.add_argument("--exit-timeout-sec", type=int, default=60, help="等 checkpoint 退出的上限")
+
     args = ap.parse_args()
 
     ensure_dirs()
@@ -126,7 +162,14 @@ def main():
         # 啟動
         p = launch_job(pick, ckpt_path)
         ts0 = now_ts()
-        used_wall, ckpt_overhead, rc = graceful_slice(p, slice_sec=args.slice_min*60)
+        # used_wall, ckpt_overhead, rc = graceful_slice(p, slice_sec=args.slice_min*60)
+        used_wall, ckpt_overhead, rc = graceful_slice(
+    	    p,
+    	    slice_sec=args.slice_min*60,
+    	    warn_before=args.warn_sec,
+    	    wait_timeout=args.exit_timeout_sec
+	)
+
 
         # 這裡先用「片長」近似有效 GPU 時間；之後你可改為整合 nvidia-smi 的 sm_util 積分
         usage[pick["user_id"]] = usage.get(pick["user_id"], 0) + min(used_wall, args.slice_min*60)
