@@ -1,0 +1,4 @@
+job_id,user_id,submit_ts,script,args
+J001,uA,0,python3,client/train_gpu_minimal.py
+J002,uB,30,python3,client/train_gpu_minimal.py
+
