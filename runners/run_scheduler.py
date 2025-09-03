@@ -1,3 +1,12 @@
+'''
+
+根據 CSV 定義的工作（job）到達時間與執行腳本，使用你選定的排程策略（Max-Min 或 FIFO 獨佔），在「片尾前 warn 幾秒送 SIGUSR1」的機制下，等待作業自行 checkpoint 並退出；若沒在時限內退出，則升級為 terminate → kill。每一片的使用情況與 checkpoint 開銷都寫進 logs/ 的 JSON 檔，usage 用「片長近似有效 GPU 時間」。
+近似的意思：
+如果某個人真的跑滿 15 分鐘，那就算他用了 15 分鐘的 GPU。
+如果他只跑 10 分鐘就自己結束，那就算他用了 10 分鐘的 GPU。
+如果他跑到 15 分鐘但 GPU 其實沒滿載（例如只用到一半效能），程式還是當成他用了 15 分鐘的 GPU。（也就是說，程式只是「看時間」來估算，假設 GPU 在這段時間裡都是滿載運算，沒有去真的量 GPU 使用率。）
+
+'''
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -100,8 +109,7 @@ def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
         ckpt_overhead = wait_timeout + 10
     t1 = now_ts()
     used_wall = max(0, int(t1 - t0))
-    return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1
-    
+    return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1    
     
     
 
