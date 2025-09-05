@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 #!/usr/bin/env python3
 import os, csv, time, json, signal, argparse, subprocess, pathlib, math
-from datetime import datetime
+from datetime import datetime, timezone
 from schedulers.timeslice_maxmin import TimesliceMaxMin
 from schedulers.fifo_exclusive import FIFOExclusive
 
@@ -37,12 +37,18 @@ def ensure_dirs():
     pathlib.Path(os.path.join(LOGS_DIR, "ckpts")).mkdir(parents=True, exist_ok=True)
 
 def now_ts():
-    return time.time()
+    #return time.time()
+    return time.monotonic()
+    
+def wall_now_iso():
+    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
 def atomic_write_json(path, obj):
     tmp = path + ".tmp"
     with open(tmp, "w") as f: json.dump(obj, f, indent=2)
     os.replace(tmp, path)
+    
+'''
 
 def launch_job(job, ckpt_path, extra_env=None):
     env = os.environ.copy()
@@ -53,6 +59,32 @@ def launch_job(job, ckpt_path, extra_env=None):
         env.update(extra_env)
     cmd = [job["script"]] + ([*job["args"].split()] if job["args"] else [])
     return subprocess.Popen(cmd, env=env)
+    
+    
+
+'''
+
+def launch_job(job, ckpt_path, extra_env=None):
+    env = os.environ.copy()
+    env["FAIR_CKPT_PATH"] = ckpt_path
+    env["FAIR_JOB_ID"]    = job["job_id"]
+    env["FAIR_USER_ID"]   = job["user_id"]
+    if extra_env:
+        env.update(extra_env)
+
+    payload = [job["script"]] + ([*job["args"].split()] if job["args"] else [])
+    payload_str = " ".join(map(str, payload))
+
+    # 若 runner 本身是被 sbatch 起來的，可以用 srun 開 step（帳務/cgroup 友善）
+    if os.getenv("SLURM_JOB_ID"):
+        cmd = ["srun", "--exclusive", "--gres=gpu:1", "--mpi=none", "bash", "-lc", payload_str]
+    else:
+        cmd = payload
+
+    return subprocess.Popen(cmd, env=env)
+
+
+
 '''
 
 def graceful_slice(p, slice_sec, warn_before=10, wait_timeout=60):
@@ -84,7 +116,9 @@ def graceful_slice(p, slice_sec, warn_before=10, wait_timeout=60):
     t1 = now_ts()
     used_wall = max(0, int(t1 - t0))
     return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1
-'''    
+''' 
+
+'''   
 def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
     t0 = now_ts()
     while True:
@@ -111,6 +145,62 @@ def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
     used_wall = max(0, int(t1 - t0))
     return used_wall, ckpt_overhead, p.returncode if p.returncode is not None else -1    
     
+'''
+    
+    
+def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
+    t0 = now_ts()
+    deadline_warn = t0 + max(0, slice_sec - warn_before)
+
+    # 1) 片尾前監看，若子行程早退就提前結束
+    exited_early = False
+    while True:
+        if p.poll() is not None:
+            exited_early = True
+            break
+        now = now_ts()
+        if now >= deadline_warn:
+            break
+        time.sleep(min(0.1, max(0, deadline_warn - now)))
+
+    # 2) 若還活著 → 發預警
+    signaled = False
+    if p.poll() is None:
+        try:
+            os.kill(p.pid, signal.SIGUSR1)
+            signaled = True
+        except ProcessLookupError:
+            pass
+
+    # 3) 等 checkpoint 退出或升級終止
+    ckpt_overhead = 0.0
+    exit_reason = None
+    if p.poll() is not None:
+        # 已在 warn 之前自然結束
+        exit_reason = "natural_early"
+    else:
+        t_pre = now_ts()
+        try:
+            p.wait(timeout=wait_timeout)
+            ckpt_overhead = now_ts() - t_pre
+            exit_reason = "ckpt_exit" if signaled else "natural"
+        except subprocess.TimeoutExpired:
+            p.terminate()
+            try:
+                p.wait(timeout=10)
+                ckpt_overhead = now_ts() - t_pre
+                exit_reason = "terminated"
+            except subprocess.TimeoutExpired:
+                p.kill()
+                ckpt_overhead = now_ts() - t_pre
+                exit_reason = "killed"
+
+    t1 = now_ts()
+    used_wall = max(0.0, t1 - t0)
+    rc = p.returncode if p.returncode is not None else -1
+    return used_wall, ckpt_overhead, rc, exit_reason
+
+
     
 
     
@@ -171,7 +261,7 @@ def main():
         p = launch_job(pick, ckpt_path)
         ts0 = now_ts()
         # used_wall, ckpt_overhead, rc = graceful_slice(p, slice_sec=args.slice_min*60)
-        used_wall, ckpt_overhead, rc = graceful_slice(
+        used_wall, ckpt_overhead, rc, exit_reason = graceful_slice(
     	    p,
     	    slice_sec=args.slice_min*60,
     	    warn_before=args.warn_sec,
@@ -184,6 +274,21 @@ def main():
 
         # 記錄切片
         slices.append({
+            "ts_start_mono": ts0,
+            "ts_end_mono": now_ts(),
+            "ts_start_wall": wall_now_iso(),
+            "ts_end_wall": wall_now_iso(),
+            "user_id": pick["user_id"],
+            "job_id": pick["job_id"],
+            "pid": p.pid,
+            "slice_sec": round(used_wall, 3),
+            "ckpt_overhead_sec": round(ckpt_overhead or 0, 3),
+            "exit_code": rc,
+            "exit_reason": exit_reason
+        })
+
+        '''
+        slices.append({
             "ts_start": ts0,
             "ts_end": now_ts(),
             "user_id": pick["user_id"],
@@ -193,12 +298,15 @@ def main():
             "ckpt_overhead_sec": round(ckpt_overhead or 0, 2),
             "exit_code": rc
         })
+        '''
+        
         atomic_write_json(os.path.join(LOGS_DIR,"slices.json"), slices)
         atomic_write_json(os.path.join(LOGS_DIR,"user_usage.json"), usage)
 
-        # 若 rc==10（自定義：表示作業自然完成），把它標成完成
-        if rc == 10:
+            
+        if exit_reason in ("natural_early", "natural", "ckpt_exit") and rc in (0, 10):
             finished.add(pick["job_id"])
+
 
     # 結束時存一次
     atomic_write_json(os.path.join(LOGS_DIR,"slices.json"), slices)
