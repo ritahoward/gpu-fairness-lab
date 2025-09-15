@@ -11,6 +11,7 @@ _SAFETY = int(os.environ.get("CKPT_SAFETY_SEC", "5"))
 _WARN_SEC = int(os.environ.get("WARN_SEC", "120"))
 
 os.makedirs(_RUN_DIR, exist_ok=True)
+print("[fair] sitecustomize.py loaded!!!!", flush=True)
 
 class _ABWriter:
     def __init__(self, run_dir):
@@ -190,6 +191,7 @@ _orig_opt_step = optim.Optimizer.step
 
 
 def _patched_opt_step(self, *args, **kwargs):
+    print('yee', flush = True)
     global _global_step
     r = _orig_opt_step(self, *args, **kwargs)
     _global_step += 1
@@ -198,6 +200,23 @@ def _patched_opt_step(self, *args, **kwargs):
     return r
 
 optim.Optimizer.step = _patched_opt_step
+
+def patch_all_optimizers():
+    for name, cls in optim.__dict__.items():
+        if isinstance(cls, type) and issubclass(cls, optim.Optimizer):
+            if "step" in cls.__dict__:  # 子類別 override 了 step
+                orig_step = cls.step
+                def _patched(self, *args, __orig=orig_step, __cls=cls, **kwargs):
+                    print(f"[fair] yee ({__cls.__name__})", flush=True)
+                    global _global_step
+                    r = __orig(self, *args, **kwargs)
+                    _global_step += 1
+                    _maybe_periodic_full(self)
+                    _flush_two_tier_on_warn(self)
+                    return r
+                cls.step = _patched
+
+patch_all_optimizers()
 
 try:
     from torch.cuda.amp import GradScaler as _GS
