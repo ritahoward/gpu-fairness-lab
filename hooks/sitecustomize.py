@@ -14,44 +14,53 @@ os.makedirs(_RUN_DIR, exist_ok=True)
 print("[fair] sitecustomize.py loaded!!!!", flush=True)
 
 class _ABWriter:
+    # creater dirs ckpt_slotA, ckpt_slotB and tmp
     def __init__(self, run_dir):
         self.run_dir = run_dir
         self.slot_names = ["ckpt_slotA","ckpt_slotB"]
         for s in self.slot_names:
             os.makedirs(os.path.join(run_dir, s), exist_ok=True)
         self.tmp = os.path.join(run_dir, "tmp"); os.makedirs(self.tmp, exist_ok=True)
+    # 從 LATEST 檔案中讀取上次的進度是存在 ckpt_slotA 還是 ckpt_slotB 並回傳
     def _active(self):
         p = os.path.join(self.run_dir, "LATEST")
         if not os.path.exists(p): return self.slot_names[0]
         with open(p,"r") as f: cur=f.read().strip()
         return cur if cur in self.slot_names else self.slot_names[0]
+    # 獲取下一次要寫檔在 ckpt_slotA 還是 ckpt_slotB
     def _next(self):
         return self.slot_names[1] if self._active()==self.slot_names[0] else self.slot_names[0]
+    # 安全地將 data 寫入 path 檔案
     def _atomic_bytes(self, path, data:bytes):
         d=os.path.dirname(path); os.makedirs(d, exist_ok=True)
         tmp=os.path.join(self.tmp, f".tmp_{int(time.time()*1e6)}_{random.randint(0,1<<16)}")
         with open(tmp,"wb") as f:
             f.write(data); f.flush(); os.fsync(f.fileno())
         os.replace(tmp, path)
+    # 安全地把一個 Python 物件存成 JSON 檔案
     def _atomic_json(self, path, obj):
         self._atomic_bytes(path, json.dumps(obj, ensure_ascii=False).encode("utf-8"))
+    # 將 src 複製到 dst 
     def _atomic_copy(self, src, dst):
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         tmp=os.path.join(self.tmp, f".tmp_{int(time.time()*1e6)}_{random.randint(0,1<<16)}")
         with open(src,"rb") as s, open(tmp,"wb") as t:
             shutil.copyfileobj(s,t, length=1<<20); t.flush(); os.fsync(t.fileno())
         os.replace(tmp,dst)
+    # 將 slot 字串原子寫入 LATEST 檔案
     def write_latest(self, slot):
         latest=os.path.join(self.run_dir,"LATEST"); tmp=latest+".tmp"
         with open(tmp,"w") as f:
             f.write(slot); f.flush(); os.fsync(f.fileno())
         os.replace(tmp, latest)
+    # 把一個 PyTorch 物件 (obj) 安全地存到 fname
     def save_state(self, slot, fname, obj):
         tmpf=os.path.join(self.tmp, f".state_{int(time.time()*1e6)}_{random.randint(0,1<<16)}.pt")
         torch.save(obj, tmpf)
         self._atomic_copy(tmpf, os.path.join(self.run_dir, slot, fname))
         try: os.remove(tmpf)
         except: pass
+    # 呼叫 _atomic_json 將 obj 物件存成 JSON 檔案
     def save_json(self, slot, fname, obj):
         self._atomic_json(os.path.join(self.run_dir, slot, fname), obj)
     def finalize(self, slot):
@@ -69,17 +78,7 @@ _last_success_ckpt_ts = 0
 _last_seen_scaler = weakref.WeakValueDictionary()
 _optimizer_to_scheduler = weakref.WeakKeyDictionary()
 
-
-def _ddp_is_init():
-    return torch.distributed.is_available() and torch.distributed.is_initialized()
-
-def _rank():
-    return torch.distributed.get_rank() if _ddp_is_init() else 0
-
-def _barrier():
-    if _ddp_is_init(): torch.distributed.barrier()
-
-
+# 根據 optimizer 來推測對應的模型, 可能有問題
 def _discover_model_from_optimizer(opt):
     params = set([p for g in opt.param_groups for p in g.get('params',[]) if isinstance(p, torch.Tensor)])
     best=None; best_cnt=-1
@@ -93,7 +92,7 @@ def _discover_model_from_optimizer(opt):
         except: pass
     return best
 
-
+# 根據 optimizer 來推測對應的 scheduler, 可能有問題
 def _get_scheduler_for_optimizer(opt):
     sch=_optimizer_to_scheduler.get(opt)
     if sch is not None: return sch
@@ -105,7 +104,7 @@ def _get_scheduler_for_optimizer(opt):
         except: pass
     return None
 
-
+# 打包要存的資訊
 def _pack_full(opt, reason="normal"):
     model = _discover_model_from_optimizer(opt)
     scaler = None
@@ -113,7 +112,7 @@ def _pack_full(opt, reason="normal"):
     scheduler = _get_scheduler_for_optimizer(opt)
     dl_state = None
     ema_state = None
-    meta = {"ts": int(time.time()), "level":"full", "trigger": reason, "reason":"none", "global_step": int(_global_step), "lr_step": int(getattr(scheduler,'last_epoch',0)), "rank": _rank(), "last_success_ckpt_ts": int(_last_success_ckpt_ts)}
+    meta = {"ts": int(time.time()), "level":"full", "trigger": reason, "reason":"none", "global_step": int(_global_step), "lr_step": int(getattr(scheduler,'last_epoch',0)), "rank": 0, "last_success_ckpt_ts": int(_last_success_ckpt_ts)}
     return {"model": (model.state_dict() if model is not None else None),
             "optimizer": opt.state_dict(),
             "scaler": (scaler.state_dict() if scaler is not None else None),
@@ -122,36 +121,38 @@ def _pack_full(opt, reason="normal"):
             "ema": ema_state,
             "meta": meta}, meta
 
-
+# 存完整資訊
 def _write_full(opt, reason):
     global _last_success_ckpt_ts
-    if _rank()!=0:
-        _barrier(); return "skipped_nonzero"
-    slot=_writer._next()
+    slot = _writer._next()
     state, meta = _pack_full(opt, reason)
     _writer.save_state(slot, "rank0.ckpt", state)
     _writer.save_json(slot, "meta.json", state["meta"])
     _writer.finalize(slot)
     _last_success_ckpt_ts = int(time.time())
-    _barrier()
     return "full"
 
-
+# 存部份資訊
 def _write_stub(reason="timeout_during_flush"):
-    if _rank()!=0:
-        _barrier(); return "stub"
-    slot=_writer._next()
-    meta={"ts": int(time.time()), "level":"stub", "trigger":"warn_flush", "reason": reason, "global_step": int(_global_step), "lr_step": 0, "rank": 0, "last_success_ckpt_ts": int(_last_success_ckpt_ts)}
+    slot = _writer._next()
+    meta = {
+        "ts": int(time.time()), 
+        "level":"stub", 
+        "trigger":"warn_flush", 
+        "reason": reason, 
+        "global_step": int(_global_step), 
+        "lr_step": 0, 
+        "rank": 0, 
+        "last_success_ckpt_ts": int(_last_success_ckpt_ts)
+    }
     _writer.save_json(slot, "meta.json", meta)
-    _barrier()
     return "stub"
-
-
+# 還剩多少時間
 def _time_left():
     if _deadline is None: return 0
     return max(0, _deadline - time.time())
 
-
+# 定期存檔
 def _maybe_periodic_full(opt):
     global _last_full_ts, _last_full_step
     now=time.time()
@@ -174,12 +175,13 @@ def _flush_two_tier_on_warn(opt):
         return _write_stub("timeout_during_flush")
     return "idle"
 
-
+# 收到 SIGUSR1 訊號時, 計算 _deadline
 def _on_warn(sig, frm):
     global _deadline, _pending_warn
     _deadline = time.time() + _WARN_SEC
     _pending_warn = True
 
+# 收到 SIGTERM 訊號時, 表示即將被 kill
 def _on_term(sig, frm):
     global _term_pending
     _term_pending = True
@@ -191,7 +193,6 @@ _orig_opt_step = optim.Optimizer.step
 
 
 def _patched_opt_step(self, *args, **kwargs):
-    print('yee', flush = True)
     global _global_step
     r = _orig_opt_step(self, *args, **kwargs)
     _global_step += 1
@@ -207,7 +208,6 @@ def patch_all_optimizers():
             if "step" in cls.__dict__:  # 子類別 override 了 step
                 orig_step = cls.step
                 def _patched(self, *args, __orig=orig_step, __cls=cls, **kwargs):
-                    print(f"[fair] yee ({__cls.__name__})", flush=True)
                     global _global_step
                     r = __orig(self, *args, **kwargs)
                     _global_step += 1
@@ -218,6 +218,7 @@ def patch_all_optimizers():
 
 patch_all_optimizers()
 
+# GradScaler 補丁, 存在 _last_seen_scaler
 try:
     from torch.cuda.amp import GradScaler as _GS
     _orig_gs_step = _GS.step
@@ -228,6 +229,7 @@ try:
 except Exception:
     pass
 
+# LRScheduler 補丁, 存在_optimizer_to_scheduler
 _orig_sched_step = None
 try:
     _orig_sched_step = optim.lr_scheduler._LRScheduler.step
@@ -276,7 +278,7 @@ def _auto_restore_try(opt):
             globals()["_global_step"] = int(meta.get("global_step", 0))
             globals()["_last_success_ckpt_ts"] = int(meta.get("ts", 0))
         except Exception: pass
-        print(f"[fair] auto-restore from {slot} OK")
+        print(f"[fair] auto-restore from {slot} OK, meta = {obj.get('meta', {})}")
     except Exception as e:
         print(f"[fair] auto-restore skipped: {e}")
     finally:
