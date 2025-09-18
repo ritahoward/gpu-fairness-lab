@@ -2,6 +2,7 @@ import os, time, json, signal, random, shutil, gc, weakref, types
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import inspect
 
 _RUN_DIR = os.environ.get("FAIR_RUN_DIR", "./runs/exp1")
 _PERIOD_SEC = int(os.environ.get("FAIR_CKPT_PERIOD_SEC", "600"))
@@ -76,33 +77,33 @@ _term_pending = False
 _global_step = 0
 _last_success_ckpt_ts = 0
 _last_seen_scaler = weakref.WeakValueDictionary()
+_param_to_model = weakref.WeakKeyDictionary()
+_optimizer_to_model = weakref.WeakKeyDictionary()
 _optimizer_to_scheduler = weakref.WeakKeyDictionary()
 
-# 根據 optimizer 來推測對應的模型, 可能有問題
-def _discover_model_from_optimizer(opt):
-    params = set([p for g in opt.param_groups for p in g.get('params',[]) if isinstance(p, torch.Tensor)])
-    best=None; best_cnt=-1
-    for obj in gc.get_objects():
-        try:
-            if isinstance(obj, nn.Module):
-                ps=set([p for p in obj.parameters(recurse=True)])
-                c=len(params & ps)
-                if c>best_cnt:
-                    best=obj; best_cnt=c
-        except: pass
-    return best
+# 猴補 Module.__init__ → 捕捉模型 & 參數
+_orig_module_init = nn.Module.__init__
+def _patched_module_init(self, *args, **kwargs):
+    self._fair_init_args = {"args": args, "kwargs": kwargs}
+    print(f"[DEBUG] Caught model init: {self.__class__.__name__}, args={args}, kwargs={kwargs}", flush=True)
+    _orig_module_init(self, *args, **kwargs)
+    for p in self.parameters(recurse=True):
+        _param_to_model[p] = self
+nn.Module.__init__ = _patched_module_init
 
-# 根據 optimizer 來推測對應的 scheduler, 可能有問題
+# 猴補 LRScheduler.__init__ → 建立 optimizer→scheduler 對應
+_orig_sched_init = optim.lr_scheduler._LRScheduler.__init__
+def _patched_sched_init(self, optimizer, *args, **kwargs):
+    _orig_sched_init(self, optimizer, *args, **kwargs)
+    _optimizer_to_scheduler[optimizer] = self
+optim.lr_scheduler._LRScheduler.__init__ = _patched_sched_init
+
+# 查詢函式
+def _discover_model_from_optimizer(opt):
+    return _optimizer_to_model.get(opt, None)
+
 def _get_scheduler_for_optimizer(opt):
-    sch=_optimizer_to_scheduler.get(opt)
-    if sch is not None: return sch
-    for obj in gc.get_objects():
-        try:
-            if isinstance(obj, optim.lr_scheduler._LRScheduler) and getattr(obj, 'optimizer', None) is opt:
-                _optimizer_to_scheduler[opt]=obj
-                return obj
-        except: pass
-    return None
+    return _optimizer_to_scheduler.get(opt, None)
 
 # 打包要存的資訊
 def _pack_full(opt, reason="normal"):
@@ -284,8 +285,22 @@ def _auto_restore_try(opt):
     finally:
         _restored_once = True
 
+# 猴補 Optimizer.__init__ → 建立 optimizer→model 對應 + 自動 restore
+_orig_opt_init = optim.Optimizer.__init__
+
 def _patched_opt_init(self, params, defaults):
+    # 原本初始化
     _orig_opt_init(self, params, defaults)
+
+    # ➊ 建立 optimizer→model 對應
+    models = set()
+    for p in params:
+        if p in _param_to_model:
+            models.add(_param_to_model[p])
+    if models:
+        _optimizer_to_model[self] = list(models) if len(models) > 1 else next(iter(models))
+        print(f"[DEBUG] Optimizer {self.__class__.__name__} bound to models: {[m.__class__.__name__ for m in models]}", flush=True)
+
     _auto_restore_try(self)
 
 optim.Optimizer.__init__ = _patched_opt_init
