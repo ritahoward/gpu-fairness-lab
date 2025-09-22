@@ -147,7 +147,7 @@ def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
     
 '''
     
-    
+'''    
 def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
     t0 = now_ts()
     deadline_warn = t0 + max(0, slice_sec - warn_before)
@@ -199,6 +199,28 @@ def graceful_slice(p, slice_sec, warn_before=5, wait_timeout=60):
     used_wall = max(0.0, t1 - t0)
     rc = p.returncode if p.returncode is not None else -1
     return used_wall, ckpt_overhead, rc, exit_reason
+
+ '''
+def graceful_slice(p, slice_sec):
+    t0 = now_ts()
+    exit_reason = None
+    try:
+        # 等到 slice_sec 秒，或子程式提前退出
+        p.wait(timeout=slice_sec)
+        exit_reason = "natural_exit"
+    except subprocess.TimeoutExpired:
+        # 時間到就 kill
+        p.kill()
+        try:
+            p.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            p.terminate()
+        exit_reason = "killed_by_timeslice"
+    t1 = now_ts()
+    used_wall = max(0.0, t1 - t0)
+    rc = p.returncode if p.returncode is not None else -1
+    return used_wall, rc, exit_reason
+
 
 
     
@@ -261,18 +283,26 @@ def main():
         p = launch_job(pick, ckpt_path)
         ts0 = now_ts()
         # used_wall, ckpt_overhead, rc = graceful_slice(p, slice_sec=args.slice_min*60)
-        used_wall, ckpt_overhead, rc, exit_reason = graceful_slice(
-    	    p,
-    	    slice_sec=args.slice_min*60,
-    	    warn_before=args.warn_sec,
-    	    wait_timeout=args.exit_timeout_sec
-	)
+        
+		used_wall, rc, exit_reason = graceful_slice(p, slice_sec=args.slice_min*60)
+
 
 
         # 這裡先用「片長」近似有效 GPU 時間；之後你可改為整合 nvidia-smi 的 sm_util 積分
         usage[pick["user_id"]] = usage.get(pick["user_id"], 0) + min(used_wall, args.slice_min*60)
 
         # 記錄切片
+		slices.append({
+    		"ts_start": ts0,
+    		"ts_end": now_ts(),
+    		"user_id": pick["user_id"],
+    		"job_id": pick["job_id"],
+    		"pid": p.pid,
+    		"slice_sec": round(used_wall, 3),
+    		"exit_code": rc,
+    		"exit_reason": exit_reason
+		})
+		'''
         slices.append({
             "ts_start_mono": ts0,
             "ts_end_mono": now_ts(),
@@ -286,6 +316,7 @@ def main():
             "exit_code": rc,
             "exit_reason": exit_reason
         })
+		'''
 
         '''
         slices.append({
