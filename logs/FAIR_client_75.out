@@ -1,0 +1,173 @@
++ export PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ echo '=== Job environment check ==='
+=== Job environment check ===
++ which python3
+/usr/bin/python3
++ python3 --version
+Python 3.8.10
++ python3 -c 'import numpy, torch; print('\''OK numpy'\'', numpy.__version__, '\''torch'\'', torch.__version__)'
+OK numpy 1.24.4 torch 2.4.1
++ export FAIR_USER_ID=yujung
++ FAIR_USER_ID=yujung
++ export FAIR_JOB_ID=75
++ FAIR_JOB_ID=75
++ export FAIR_RUN_DIR=/home/yujung/fair_runs/75
++ FAIR_RUN_DIR=/home/yujung/fair_runs/75
++ mkdir -p /home/yujung/fair_runs/75
++ export FAIR_CKPT_PATH=/home/yujung/fair_runs/75/ckpt.pt
++ FAIR_CKPT_PATH=/home/yujung/fair_runs/75/ckpt.pt
++ cd /home/yujung/gpu-fairness-lab
++ python3 client/train_gpu_minimal.py
+[WARN] No CUDA GPU found. This script is meant to run on a GPU.
+[yujung/75] start pid=37377 device=cpu from (epoch=0, step=0)
+[yujung/75] epoch=0 step=0 loss=2.3131
+[yujung/75] epoch=0 step=200 loss=2.3024
+[yujung/75] epoch=0 step=400 loss=2.3024
+[yujung/75] epoch=0 step=600 loss=2.3026
+[yujung/75] epoch=0 step=800 loss=2.3027
+[yujung/75] epoch=0 step=1000 loss=2.3034
+[yujung/75] epoch=0 step=1200 loss=2.3026
+[yujung/75] epoch=0 step=1400 loss=2.3027
+[yujung/75] epoch=0 step=1600 loss=2.3019
+[yujung/75] epoch=0 step=1800 loss=2.3023
+[yujung/75] epoch=1 step=0 loss=2.3030
+[yujung/75] epoch=1 step=200 loss=2.3024
+[yujung/75] epoch=1 step=400 loss=2.3027
+[yujung/75] epoch=1 step=600 loss=2.3031
+[yujung/75] epoch=1 step=800 loss=2.3029
+[yujung/75] epoch=1 step=1000 loss=2.3022
+[yujung/75] epoch=1 step=1200 loss=2.3032
+[yujung/75] epoch=1 step=1400 loss=2.3033
+[yujung/75] epoch=1 step=1600 loss=2.3030
+[yujung/75] epoch=1 step=1800 loss=2.3025
+[yujung/75] epoch=2 step=0 loss=2.3025
+[yujung/75] epoch=2 step=200 loss=2.3023
+[yujung/75] epoch=2 step=400 loss=2.3024
+[yujung/75] epoch=2 step=600 loss=2.3031
+[yujung/75] epoch=2 step=800 loss=2.3034
+[yujung/75] epoch=2 step=1000 loss=2.3031
+[yujung/75] epoch=2 step=1200 loss=2.3027
+[yujung/75] epoch=2 step=1400 loss=2.3026
+[yujung/75] epoch=2 step=1600 loss=2.3029
+[yujung/75] epoch=2 step=1800 loss=2.3018
+[yujung/75] epoch=3 step=0 loss=2.3018
+[yujung/75] epoch=3 step=200 loss=2.3021
+[yujung/75] epoch=3 step=400 loss=2.3024
+[yujung/75] epoch=3 step=600 loss=2.3027
+[yujung/75] epoch=3 step=800 loss=2.3025
+[yujung/75] epoch=3 step=1000 loss=2.3021
+[yujung/75] epoch=3 step=1200 loss=2.3028
+[yujung/75] epoch=3 step=1400 loss=2.3027
+[yujung/75] epoch=3 step=1600 loss=2.3024
+[yujung/75] epoch=3 step=1800 loss=2.3024
+[yujung/75] epoch=4 step=0 loss=2.3027
+[yujung/75] epoch=4 step=200 loss=2.3020
+[yujung/75] epoch=4 step=400 loss=2.3025
+[yujung/75] epoch=4 step=600 loss=2.3028
+[yujung/75] epoch=4 step=800 loss=2.3026
+[yujung/75] epoch=4 step=1000 loss=2.3029
+[yujung/75] epoch=4 step=1200 loss=2.3034
+[yujung/75] epoch=4 step=1400 loss=2.3030
+[yujung/75] epoch=4 step=1600 loss=2.3025
+[yujung/75] epoch=4 step=1800 loss=2.3024
+[yujung/75] epoch=5 step=0 loss=2.3028
+[yujung/75] epoch=5 step=200 loss=2.3030
+[yujung/75] epoch=5 step=400 loss=2.3023
+[yujung/75] epoch=5 step=600 loss=2.3021
+[yujung/75] epoch=5 step=800 loss=2.3024
+[yujung/75] epoch=5 step=1000 loss=2.3032
+[yujung/75] epoch=5 step=1200 loss=2.3029
+[yujung/75] epoch=5 step=1400 loss=2.3027
+[yujung/75] epoch=5 step=1600 loss=2.3026
+[yujung/75] epoch=5 step=1800 loss=2.3027
+[yujung/75] epoch=6 step=0 loss=2.3023
+[yujung/75] epoch=6 step=200 loss=2.3019
+[yujung/75] epoch=6 step=400 loss=2.3021
+[yujung/75] epoch=6 step=600 loss=2.3023
+[yujung/75] epoch=6 step=800 loss=2.3021
+[yujung/75] epoch=6 step=1000 loss=2.3035
+[yujung/75] epoch=6 step=1200 loss=2.3033
+[yujung/75] epoch=6 step=1400 loss=2.3024
+[yujung/75] epoch=6 step=1600 loss=2.3030
+[yujung/75] epoch=6 step=1800 loss=2.3031
+[yujung/75] epoch=7 step=0 loss=2.3023
+[yujung/75] epoch=7 step=200 loss=2.3035
+[yujung/75] epoch=7 step=400 loss=2.3026
+[yujung/75] epoch=7 step=600 loss=2.3019
+[yujung/75] epoch=7 step=800 loss=2.3030
+[yujung/75] epoch=7 step=1000 loss=2.3025
+[yujung/75] epoch=7 step=1200 loss=2.3027
+[yujung/75] epoch=7 step=1400 loss=2.3022
+[yujung/75] epoch=7 step=1600 loss=2.3028
+[yujung/75] epoch=7 step=1800 loss=2.3021
+[yujung/75] epoch=8 step=0 loss=2.3020
+[yujung/75] epoch=8 step=200 loss=2.3027
+[yujung/75] epoch=8 step=400 loss=2.3017
+[yujung/75] epoch=8 step=600 loss=2.3025
+[yujung/75] epoch=8 step=800 loss=2.3027
+[yujung/75] epoch=8 step=1000 loss=2.3023
+[yujung/75] epoch=8 step=1200 loss=2.3027
+[yujung/75] epoch=8 step=1400 loss=2.3022
+[yujung/75] epoch=8 step=1600 loss=2.3027
+[yujung/75] epoch=8 step=1800 loss=2.3022
+[yujung/75] epoch=9 step=0 loss=2.3035
+[yujung/75] epoch=9 step=200 loss=2.3024
+[yujung/75] epoch=9 step=400 loss=2.3023
+[yujung/75] epoch=9 step=600 loss=2.3029
+[yujung/75] epoch=9 step=800 loss=2.3023
+[yujung/75] epoch=9 step=1000 loss=2.3028
+[yujung/75] epoch=9 step=1200 loss=2.3024
+[yujung/75] epoch=9 step=1400 loss=2.3027
+[yujung/75] epoch=9 step=1600 loss=2.3027
+[yujung/75] epoch=9 step=1800 loss=2.3021
+[yujung/75] epoch=10 step=0 loss=2.3027
+[yujung/75] epoch=10 step=200 loss=2.3029
+[yujung/75] epoch=10 step=400 loss=2.3024
+[yujung/75] epoch=10 step=600 loss=2.3034
+[yujung/75] epoch=10 step=800 loss=2.3025
+[yujung/75] epoch=10 step=1000 loss=2.3029
+[yujung/75] epoch=10 step=1200 loss=2.3027
+[yujung/75] epoch=10 step=1400 loss=2.3024
+[yujung/75] epoch=10 step=1600 loss=2.3026
+[yujung/75] epoch=10 step=1800 loss=2.3023
+[yujung/75] epoch=11 step=0 loss=2.3026
+[yujung/75] epoch=11 step=200 loss=2.3029
+[yujung/75] epoch=11 step=400 loss=2.3026
+[yujung/75] epoch=11 step=600 loss=2.3025
+[yujung/75] epoch=11 step=800 loss=2.3034
+[yujung/75] epoch=11 step=1000 loss=2.3022
+[yujung/75] epoch=11 step=1200 loss=2.3032
+[yujung/75] epoch=11 step=1400 loss=2.3023
+[yujung/75] epoch=11 step=1600 loss=2.3029
+[yujung/75] epoch=11 step=1800 loss=2.3029
+[yujung/75] epoch=12 step=0 loss=2.3025
+[yujung/75] epoch=12 step=200 loss=2.3028
+[yujung/75] epoch=12 step=400 loss=2.3025
+[yujung/75] epoch=12 step=600 loss=2.3028
+[yujung/75] epoch=12 step=800 loss=2.3024
+[yujung/75] epoch=12 step=1000 loss=2.3027
+[yujung/75] epoch=12 step=1200 loss=2.3027
+[yujung/75] epoch=12 step=1400 loss=2.3020
+[yujung/75] epoch=12 step=1600 loss=2.3024
+[yujung/75] epoch=12 step=1800 loss=2.3026
+[yujung/75] epoch=13 step=0 loss=2.3021
+[yujung/75] epoch=13 step=200 loss=2.3018
+[yujung/75] epoch=13 step=400 loss=2.3031
+[yujung/75] epoch=13 step=600 loss=2.3025
+[yujung/75] epoch=13 step=800 loss=2.3028
+[yujung/75] epoch=13 step=1000 loss=2.3022
+[yujung/75] epoch=13 step=1200 loss=2.3023
+[yujung/75] epoch=13 step=1400 loss=2.3027
+[yujung/75] epoch=13 step=1600 loss=2.3029
+[yujung/75] epoch=13 step=1800 loss=2.3024
+[yujung/75] epoch=14 step=0 loss=2.3023
+[yujung/75] epoch=14 step=200 loss=2.3027
+[yujung/75] epoch=14 step=400 loss=2.3033
+[yujung/75] epoch=14 step=600 loss=2.3026
+[yujung/75] epoch=14 step=800 loss=2.3025
+[yujung/75] epoch=14 step=1000 loss=2.3031
+[yujung/75] epoch=14 step=1200 loss=2.3031
+[yujung/75] epoch=14 step=1400 loss=2.3027
+[yujung/75] epoch=14 step=1600 loss=2.3024
+slurmstepd-yujung: error: *** JOB 75 ON yujung CANCELLED AT 2025-10-12T07:13:51 ***

@@ -1,0 +1,10 @@
++ export PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ echo '=== Job environment check ==='
+=== Job environment check ===
++ which python3
+/usr/bin/python3
++ python3 --version
+Python 3.8.10
++ python3 -c 'import numpy, torch; print('\''OK numpy'\'', numpy.__version__, '\''torch'\'', torch.__version__)'
+slurmstepd-yujung: error: *** JOB 96 ON yujung CANCELLED AT 2025-10-12T07:50:06 ***

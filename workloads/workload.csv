@@ -1,0 +1,6 @@
+job_id,user_id,submit_ts,script,args,ckpt
+J001,uA,0,python3,client/train_ckpt.py,
+J002,uB,30,python3,client/train_ignore.py,
+J003,uA,60,python3,client/train_short.py,
+J004,uC,90,python3,client/train_slowckpt.py,
+

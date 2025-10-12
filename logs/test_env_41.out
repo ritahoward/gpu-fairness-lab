@@ -1,0 +1,27 @@
+=== Test: environment info ===
+SHELL=/bin/bash
+whoami=yujung
+HOME=/home/yujung
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+/usr/bin/bash
+/usr/bin/sh
+drwxrwxr-x 6 yujung yujung 4096 Oct  6 15:23 /home/yujung/venv
+activate
+activate.csh
+activate.fish
+Activate.ps1
+convert-caffe2-to-onnx
+convert-onnx-to-caffe2
+easy_install
+easy_install-3.8
+f2py
+f2py3
+f2py3.8
+isympy
+pip
+pip3
+pip3.8
+python
+python3
+torchrun
+==============================

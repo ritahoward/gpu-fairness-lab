@@ -1,0 +1,349 @@
++ trap 'echo "[trap] Forwarding SIGUSR1 manually"; pkill -USR1 -P $$' USR1
++ true
++ export PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ sleep 1
++ PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ echo '=== Job environment check ==='
+=== Job environment check ===
++ which python3
+/usr/bin/python3
++ python3 --version
+Python 3.8.10
++ python3 -c 'import numpy, torch; print('\''OK numpy'\'', numpy.__version__, '\''torch'\'', torch.__version__)'
+OK numpy 1.24.4 torch 2.4.1
++ export FAIR_USER_ID=yujung
++ FAIR_USER_ID=yujung
++ export FAIR_JOB_ID=22
++ FAIR_JOB_ID=22
++ export FAIR_RUN_DIR=/home/yujung/fair_runs/22
++ FAIR_RUN_DIR=/home/yujung/fair_runs/22
++ mkdir -p /home/yujung/fair_runs/22
++ export FAIR_CKPT_PATH=/home/yujung/fair_runs/22/ckpt.pt
++ FAIR_CKPT_PATH=/home/yujung/fair_runs/22/ckpt.pt
++ cd /home/yujung/gpu-fairness-lab
++ python3 client/train_gpu_minimal.py
+[WARN] No CUDA GPU found. This script is meant to run on a GPU.
++ true
++ sleep 1
+[yujung/22] start pid=31336 device=cpu from (epoch=0, step=0)
+[yujung/22] epoch=0 step=0 loss=2.3045
++ true
++ sleep 1
+[yujung/22] epoch=0 step=200 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=400 loss=2.3018
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=600 loss=2.3021
++ true
++ sleep 1
+[yujung/22] epoch=0 step=800 loss=2.3030
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=1000 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=1200 loss=2.3033
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=1400 loss=2.3028
++ true
++ sleep 1
+[yujung/22] epoch=0 step=1600 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=0 step=1800 loss=2.3033
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=0 loss=2.3021
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=200 loss=2.3022
++ true
++ sleep 1
+[yujung/22] epoch=1 step=400 loss=2.3019
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=600 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=800 loss=2.3027
++ true
++ sleep 1
+[yujung/22] epoch=1 step=1000 loss=2.3029
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=1200 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=1400 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=1 step=1600 loss=2.3029
++ true
++ sleep 1
+[yujung/22] epoch=1 step=1800 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=0 loss=2.3023
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=200 loss=2.3019
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=400 loss=2.3022
++ true
++ sleep 1
+[yujung/22] epoch=2 step=600 loss=2.3017
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=800 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=1000 loss=2.3029
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=1200 loss=2.3023
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=1400 loss=2.3029
++ true
++ sleep 1
+[yujung/22] epoch=2 step=1600 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=2 step=1800 loss=2.3031
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=0 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=200 loss=2.3022
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=400 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=600 loss=2.3023
++ true
++ sleep 1
+[yujung/22] epoch=3 step=800 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=1000 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=1200 loss=2.3024
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=1400 loss=2.3030
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=1600 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=3 step=1800 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=0 loss=2.3026
++ true
++ sleep 1
+[yujung/22] epoch=4 step=200 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=400 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=600 loss=2.3031
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=800 loss=2.3024
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=1000 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=1200 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=1400 loss=2.3032
++ true
++ sleep 1
+[yujung/22] epoch=4 step=1600 loss=2.3021
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=4 step=1800 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=0 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=200 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=400 loss=2.3027
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=600 loss=2.3023
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=800 loss=2.3024
++ true
++ sleep 1
+[yujung/22] epoch=5 step=1000 loss=2.3020
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=1200 loss=2.3019
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=1400 loss=2.3030
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=1600 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=5 step=1800 loss=2.3024
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=0 loss=2.3025
++ true
++ sleep 1
+[yujung/22] epoch=6 step=200 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=400 loss=2.3026
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=600 loss=2.3028
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=800 loss=2.3022
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=1000 loss=2.3021
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=1200 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=1400 loss=2.3025
++ true
++ sleep 1
++ true
++ sleep 1
+[yujung/22] epoch=6 step=1600 loss=2.3025
++ true
++ sleep 1
+[yujung/22] epoch=6 step=1800 loss=2.3026
++ true
++ sleep 1
+slurmstepd-yujung: error: *** JOB 22 ON yujung CANCELLED AT 2025-10-08T10:02:59 ***

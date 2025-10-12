@@ -1,0 +1,29 @@
++ export PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ PYTHONPATH=/home/yujung/.local/lib/python3.8/site-packages:
++ echo '=== Job environment check ==='
+=== Job environment check ===
++ which python3
+/usr/bin/python3
++ python3 --version
+Python 3.8.10
++ python3 -c 'import numpy, torch; print('\''OK numpy'\'', numpy.__version__, '\''torch'\'', torch.__version__)'
+OK numpy 1.24.4 torch 2.4.1
++ export FAIR_USER_ID=yujung
++ FAIR_USER_ID=yujung
++ export FAIR_JOB_ID=87
++ FAIR_JOB_ID=87
++ export FAIR_RUN_DIR=/home/yujung/fair_runs/87
++ FAIR_RUN_DIR=/home/yujung/fair_runs/87
++ mkdir -p /home/yujung/fair_runs/87
++ export FAIR_CKPT_PATH=/home/yujung/fair_runs/87/ckpt.pt
++ FAIR_CKPT_PATH=/home/yujung/fair_runs/87/ckpt.pt
++ cd /home/yujung/gpu-fairness-lab
++ python3 client/train_gpu_minimal.py
+[WARN] No CUDA GPU found. This script is meant to run on a GPU.
+[yujung/87] start pid=46758 device=cpu from (epoch=0, step=0)
+[yujung/87] epoch=0 step=0 loss=2.3061
+[yujung/87] epoch=0 step=200 loss=2.3037
+[yujung/87] epoch=0 step=400 loss=2.3010
+[yujung/87] epoch=0 step=600 loss=2.3023
+[yujung/87] epoch=0 step=800 loss=2.3029
+slurmstepd-yujung: error: *** JOB 87 ON yujung CANCELLED AT 2025-10-12T07:33:03 DUE TO JOB REQUEUE ***
